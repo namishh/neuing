@@ -26,15 +26,17 @@ func generateData(samples, classes int) (X [][]float64, y []int) {
 	return
 }
 
-func transpose(m [][]int) [][]int {
+// transposition of a matrix ; rotating a matrix by 90 degrees
+// https://en.wikipedia.org/wiki/Transpose
+func transpose(m [][]float64) [][]float64 {
 	if len(m) == 0 {
 		return m
 	}
 	r := len(m)
 	c := len(m[0])
-	t := make([][]int, c)
+	t := make([][]float64, c)
 	for i := 0; i < c; i++ {
-		t[i] = make([]int, r)
+		t[i] = make([]float64, r)
 		for j := 0; j < r; j++ {
 			t[i][j] = m[j][i]
 		}
@@ -42,7 +44,8 @@ func transpose(m [][]int) [][]int {
 	return t
 }
 
-func matrixProduct(m1, m2 [][]int) [][]int {
+// standard product of two matrices
+func matrixProduct(m1, m2 [][]float64) [][]float64 {
 	r1 := len(m1)
 	c1 := len(m1[0])
 	r2 := len(m2)
@@ -52,9 +55,9 @@ func matrixProduct(m1, m2 [][]int) [][]int {
 		panic("Matrices can't be multiplied")
 	}
 
-	result := make([][]int, r1)
+	result := make([][]float64, r1)
 	for i := 0; i < r1; i++ {
-		result[i] = make([]int, c2)
+		result[i] = make([]float64, c2)
 		for j := 0; j < c2; j++ {
 			for k := 0; k < c1; k++ {
 				result[i][j] += m1[i][k] * m2[k][j]
@@ -64,7 +67,7 @@ func matrixProduct(m1, m2 [][]int) [][]int {
 	return result
 }
 
-func addBias(p [][]int, bias []int) (output [][]int) {
+func addBias(p [][]float64, bias []float64) (output [][]float64) {
 	l := len(p)
 	if l == 0 {
 		return nil
@@ -72,9 +75,9 @@ func addBias(p [][]int, bias []int) (output [][]int) {
 	if l != len(bias) {
 		panic("Can't Add Bias: Number of biases must match the number of slices in p")
 	}
-	output = make([][]int, l)
+	output = make([][]float64, l)
 	for i := 0; i < l; i++ {
-		output[i] = make([]int, len(p[i]))
+		output[i] = make([]float64, len(p[i]))
 		for j := 0; j < len(p[i]); j++ {
 			output[i][j] = p[i][j] + bias[i]
 		}
@@ -82,19 +85,50 @@ func addBias(p [][]int, bias []int) (output [][]int) {
 	return
 }
 
-func getOutput(inputs [][]int, weights [][]int, bias []int) [][]int {
+func getOutput(inputs [][]float64, weights [][]float64, bias []float64) [][]float64 {
 	return addBias(matrixProduct(inputs, transpose(weights)), bias)
+}
+
+// make a Dense layer struct
+type DenseLayer struct {
+	weights [][]float64
+	bias    [][]float64
+}
+
+// implmentation of numpy.zeros
+func zeros(x int, y int) [][]float64 {
+	grid := make([][]float64, x)
+	for i := 0; i < x; i++ {
+		grid[i] = make([]float64, y)
+		for j := 0; j < y; j++ {
+			grid[i][j] = 0
+		}
+	}
+	return grid
+}
+
+func InitWeights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
+	weights := make([][]float64, nInputs)
+	for i := 0; i < nInputs; i++ {
+		weights[i] = make([]float64, nNeurons)
+		for j := 0; j < nNeurons; j++ {
+			weights[i][j] = multiplier * rand.NormFloat64()
+		}
+	}
+	return weights
+}
+
+// make a Dense layer constructor
+func NewDenseLayer(nInputs int, nNeurons int) *DenseLayer {
+	bias := zeros(1, 5)
+	return &DenseLayer{bias: bias, weights: InitWeights(nInputs, nNeurons, 0.01)}
 }
 
 func main() {
 	fmt.Println("Hello World!")
-	inputs := [][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}
-	weights := [][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}
+	// X, y := generateData(100, 3)
+	// fmt.Println(X, y)
 
-	bias := []int{1, 2, 3}
-
-	X, y := generateData(100, 3)
-	fmt.Println(X, y)
-
-	fmt.Println(getOutput(inputs, weights, bias))
+	x := NewDenseLayer(2, 3)
+	fmt.Println(x.weights)
 }
