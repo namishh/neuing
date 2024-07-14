@@ -93,6 +93,7 @@ func getOutput(inputs [][]float64, weights [][]float64, bias []float64) [][]floa
 type DenseLayer struct {
 	weights [][]float64
 	bias    [][]float64
+	output  [][]float64
 }
 
 // implmentation of numpy.zeros
@@ -107,7 +108,7 @@ func zeros(x int, y int) [][]float64 {
 	return grid
 }
 
-func InitWeights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
+func Initweights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
 	weights := make([][]float64, nInputs)
 	for i := 0; i < nInputs; i++ {
 		weights[i] = make([]float64, nNeurons)
@@ -121,14 +122,121 @@ func InitWeights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
 // make a Dense layer constructor
 func NewDenseLayer(nInputs int, nNeurons int) *DenseLayer {
 	bias := zeros(1, 5)
-	return &DenseLayer{bias: bias, weights: InitWeights(nInputs, nNeurons, 0.01)}
+	return &DenseLayer{bias: bias, weights: Initweights(nInputs, nNeurons, 0.01)}
+}
+
+func (d *DenseLayer) Forward(inputs [][]float64) {
+	mp := matrixProduct(inputs, d.weights)
+	for ind, arr := range mp {
+		for idx := range arr {
+			mp[ind][idx] += d.bias[0][idx]
+		}
+	}
+	d.output = mp
+}
+
+type ReLU struct {
+	output [][]float64
+}
+
+func NewReLU() *ReLU {
+	return &ReLU{}
+}
+
+// if x > 0 return x else return 0
+func (r *ReLU) Forward(inputs [][]float64) {
+	r.output = make([][]float64, len(inputs))
+	for i, arr := range inputs {
+		r.output[i] = make([]float64, len(arr))
+		for j, val := range arr {
+			r.output[i][j] = math.Max(0, val)
+		}
+	}
+}
+
+type Softmax struct {
+	output [][]float64
+}
+
+func NewSoftmax() *Softmax {
+	return &Softmax{}
+}
+
+// replace of numpy.exp
+func Exponential(inputs [][]float64) [][]float64 {
+	E := math.E
+	for i, arr := range inputs {
+		for j, val := range arr {
+			inputs[i][j] = math.Pow(E, val)
+		}
+	}
+	return inputs
+}
+
+func Max(inputs [][]float64) [][]float64 {
+	result := make([][]float64, len(inputs))
+	for i, row := range inputs {
+		maxValue := math.Inf(-1) // negative infinity
+		for _, value := range row {
+			if value > maxValue {
+				maxValue = value
+			}
+		}
+		result[i] = []float64{maxValue}
+	}
+	return result
+}
+
+func (s *Softmax) Forward(inputs [][]float64) {
+	// subtract Inputs and Max(Inputs)
+	difference := make([][]float64, len(inputs))
+	maxInputs := Max(inputs)
+	for i, arr := range inputs {
+		difference[i] = make([]float64, len(arr))
+		for j, val := range arr {
+			difference[i][j] = val - maxInputs[i][0]
+		}
+	}
+
+	exponentials := Exponential(difference)
+
+	rowSums := make([]float64, len(exponentials))
+	for i, row := range exponentials {
+		sum := 0.0
+		for _, value := range row {
+			sum += value
+		}
+		rowSums[i] = sum
+	}
+
+	probabilities := make([][]float64, len(exponentials))
+	for i, row := range exponentials {
+		probRow := make([]float64, len(row))
+		for j, value := range row {
+			probRow[j] = value / rowSums[i]
+		}
+		probabilities[i] = probRow
+	}
+
+	s.output = probabilities
 }
 
 func main() {
 	fmt.Println("Hello World!")
-	// X, y := generateData(100, 3)
+	X, _ := generateData(100, 3)
 	// fmt.Println(X, y)
 
-	x := NewDenseLayer(2, 3)
-	fmt.Println(x.weights)
+	denseLayer1 := NewDenseLayer(2, 3)
+	denseLayer1.Forward(X)
+
+	activation := NewReLU()
+	activation.Forward(denseLayer1.output)
+
+	denseLayer2 := NewDenseLayer(3, 3)
+	denseLayer2.Forward(activation.output)
+
+	softmax := NewSoftmax()
+	softmax.Forward(denseLayer2.output)
+
+	fmt.Println(softmax.output)
 }
