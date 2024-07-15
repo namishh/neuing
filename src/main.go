@@ -6,12 +6,22 @@ import (
 	"math/rand"
 )
 
+// small helper utility
+func IndexOf(element float64, data []float64) int {
+	for k, v := range data {
+		if element == v {
+			return k
+		}
+	}
+	return -1 //not found.
+}
+
 // this is just generated from chatgpt which converts
 // https://github.com/Sentdex/nnfs/blob/master/nnfs/datasets/spiral.py this code to this
 // orignal license : https://github.com/cs231n/cs231n.github.io/blob/master/LICENSE
-func generateData(samples, classes int) (X [][]float64, y []int) {
+func generateData(samples, classes int) (X [][]float64, y []float64) {
 	X = make([][]float64, samples*classes)
-	y = make([]int, samples*classes)
+	y = make([]float64, samples*classes)
 	for classNumber := 0; classNumber < classes; classNumber++ {
 		ixStart := samples * classNumber
 		r := make([]float64, samples)
@@ -20,7 +30,7 @@ func generateData(samples, classes int) (X [][]float64, y []int) {
 			r[i] = float64(i) / float64(samples-1)
 			t[i] = float64(classNumber)*4.0 + float64(classNumber+1)*4.0*float64(i)/float64(samples) + rand.NormFloat64()*0.2
 			X[ixStart+i] = []float64{r[i] * math.Sin(t[i]*2.5), r[i] * math.Cos(t[i]*2.5)}
-			y[ixStart+i] = classNumber
+			y[ixStart+i] = float64(classNumber)
 		}
 	}
 	return
@@ -221,22 +231,107 @@ func (s *Softmax) Forward(inputs [][]float64) {
 	s.output = probabilities
 }
 
+// implmentation of numpy.clip
+func Clip(x float64, min float64, max float64) float64 {
+	if x < min {
+		return min
+	} else if x > max {
+		return max
+	}
+
+	return x
+}
+
+// get largest emelent of an array
+func MaxElement(arr []float64) float64 {
+	max := arr[0]
+	for _, val := range arr {
+		if val > max {
+			max = val
+		}
+	}
+	return max
+}
+
+// Loss Function
+func CategoricalCrossEntropyLoss(yPred [][]float64, yTrue []float64) (loss float64) {
+	//samples = len(yPred)
+	yPredClipped := make([][]float64, len(yPred))
+	for i, arr := range yPred {
+		yPredClipped[i] = make([]float64, len(arr))
+		for j, val := range arr {
+			yPredClipped[i][j] = Clip(val, 1e-7, 1-1e-7)
+		}
+	}
+
+	loss = float64(0)
+
+	// loop through each array in yPredClipped and add the negative log of the largest value in the array to another array
+	for _, arr := range yPredClipped {
+		loss += -math.Log(MaxElement(arr))
+	}
+
+	loss = loss / float64(len(yPredClipped))
+	return
+}
+
+// Implmentation of numpy.argmax
+func Accuracy(actOutput [][]float64, y []float64) float64 {
+
+	predictions := make([]float64, len(actOutput))
+	for i, arr := range actOutput {
+		predictions[i] = float64(IndexOf(MaxElement(arr), arr))
+	}
+
+	numCorrect := 0.0
+
+	// Iterate over the predictions and class targets
+	for i := 0; i < len(predictions); i++ {
+		// If the prediction matches the class target, increment the count
+		if predictions[i] == y[i] {
+			numCorrect++
+		}
+	}
+
+	accuracy := numCorrect / float64(len(predictions))
+
+	return accuracy
+}
+
 func main() {
 	fmt.Println("Hello World!")
-	X, _ := generateData(100, 3)
+
+	// Create Random Dataset
+	X, y := generateData(100, 3)
+
 	// fmt.Println(X, y)
 
+	// Create Dense layer with 2 input features and 3 output values
 	denseLayer1 := NewDenseLayer(2, 3)
+	// Make a forward pass of our training data through this layer
 	denseLayer1.Forward(X)
 
+	// Create ReLU activation (to be used with Dense layer):
 	activation := NewReLU()
+	// Make a forward pass through activation function
+	// it takes the output of first dense layer here
 	activation.Forward(denseLayer1.output)
 
+	// Create second Dense layer with 3 input features (as we take output
+	//  of previous layer here) and 3 output values (output values)
 	denseLayer2 := NewDenseLayer(3, 3)
+	// Make a forward pass through second Dense layer
+	// it takes outputs of activation function of first layer as inputs
 	denseLayer2.Forward(activation.output)
 
+	// Create Softmax activation (to be used with Dense layer):
 	softmax := NewSoftmax()
+	// make a forward pass through activation function
+	// it takes the output of second dense layer here
 	softmax.Forward(denseLayer2.output)
 
-	fmt.Println(softmax.output)
+	loss := CategoricalCrossEntropyLoss(softmax.output, y)
+	acc := Accuracy(activation.output, y)
+	fmt.Println(loss)
+	fmt.Println(acc)
 }
