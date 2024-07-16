@@ -101,9 +101,12 @@ func getOutput(inputs [][]float64, weights [][]float64, bias []float64) [][]floa
 
 // make a Dense layer struct
 type DenseLayer struct {
-	weights [][]float64
-	bias    [][]float64
-	output  [][]float64
+	dWeights [][]float64
+	dBias    [][]float64
+	dInputs  [][]float64
+	weights  [][]float64
+	bias     [][]float64
+	output   [][]float64
 }
 
 // implmentation of numpy.zeros
@@ -143,10 +146,24 @@ func (d *DenseLayer) Forward(inputs [][]float64) {
 		}
 	}
 	d.output = mp
+	d.dInputs = inputs
+}
+
+func (d *DenseLayer) Backward(dValues [][]float64) {
+	d.dWeights = matrixProduct(transpose(d.dInputs), dValues)
+	a := transpose(dValues)
+	for i := 0; i < len(a); i++ {
+		for j := 0; j < len(a[i]); j++ {
+			d.dBias[0][j] += a[i][j]
+		}
+	}
+	d.dInputs = matrixProduct(dValues, transpose(d.weights))
 }
 
 type ReLU struct {
-	output [][]float64
+	output  [][]float64
+	inputs  [][]float64
+	dInputs [][]float64
 }
 
 func NewReLU() *ReLU {
@@ -155,11 +172,24 @@ func NewReLU() *ReLU {
 
 // if x > 0 return x else return 0
 func (r *ReLU) Forward(inputs [][]float64) {
+	r.inputs = inputs
 	r.output = make([][]float64, len(inputs))
 	for i, arr := range inputs {
 		r.output[i] = make([]float64, len(arr))
 		for j, val := range arr {
 			r.output[i][j] = math.Max(0, val)
+		}
+	}
+}
+
+func (r *ReLU) Backward(dValues [][]float64) {
+	r.dInputs = make([][]float64, len(r.inputs))
+	for i, arr := range r.inputs {
+		r.dInputs[i] = make([]float64, len(arr))
+		for j, val := range arr {
+			if val > 0 {
+				r.dInputs[i][j] = dValues[i][j]
+			}
 		}
 	}
 }

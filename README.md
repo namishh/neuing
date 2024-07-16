@@ -13,6 +13,7 @@ go run src/main.go
 - [x] Layers
 - [x] Activation Functions
 - [x] Loss Functions
+- [ ] Rewrite Loss as a Type :sob:
 - [ ] Optimization
 - [ ] Data
   - [ ] Loading Data
