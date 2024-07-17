@@ -49,28 +49,29 @@ func (s *Softmax) Backward(dValues [][]float64) {
 	s.dInputs = make([][]float64, len(s.output))
 
 	for index, singleOutput := range s.output {
-		singleOutput = []float64(singleOutput)
-		jacobian_matrix := make([][]float64, len(singleOutput))
-		for i := range singleOutput {
-			jacobian_matrix[i] = make([]float64, len(singleOutput))
-			for j := range singleOutput {
+		// Calculate Jacobian matrix
+		jacobianMatrix := make([][]float64, len(singleOutput))
+		for i := range jacobianMatrix {
+			jacobianMatrix[i] = make([]float64, len(singleOutput))
+			for j := range jacobianMatrix[i] {
 				if i == j {
-					jacobian_matrix[i][j] = singleOutput[i]
+					jacobianMatrix[i][j] = singleOutput[i] * (1 - singleOutput[j])
 				} else {
-					jacobian_matrix[i][j] = -singleOutput[i] * singleOutput[j]
+					jacobianMatrix[i][j] = -singleOutput[i] * singleOutput[j]
 				}
 			}
 		}
 
 		// Calculate sample-wise gradient
-		// and add it to the array of sample gradients
-		sample_gradient := make([]float64, len(singleOutput))
-		for i := range singleOutput {
+		sampleGradient := make([]float64, len(singleOutput))
+		for i := range sampleGradient {
 			for j := range singleOutput {
-				sample_gradient[i] += jacobian_matrix[i][j] * dValues[index][j]
+				sampleGradient[i] += jacobianMatrix[i][j] * dValues[index][j]
 			}
 		}
-		s.dInputs[index] = sample_gradient
+
+		// Store the gradient in s.dInputs
+		s.dInputs[index] = sampleGradient
 	}
 }
 

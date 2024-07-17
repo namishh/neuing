@@ -1,6 +1,8 @@
 package neural
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 // make a Dense layer struct
 type DenseLayer struct {
@@ -24,15 +26,15 @@ func Initweights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
 }
 
 func NewDenseLayer(nInputs int, nNeurons int) *DenseLayer {
-	bias := zeros(1, 5)
+	bias := zeros(1, 64)
 	return &DenseLayer{bias: bias, weights: Initweights(nInputs, nNeurons, 0.01)}
 }
 
 func (d *DenseLayer) Forward(inputs [][]float64) {
 	mp := matrixProduct(inputs, d.weights)
-	for ind, arr := range mp {
-		for idx := range arr {
-			mp[ind][idx] += d.bias[0][idx]
+	for i := 0; i < len(mp); i++ {
+		for j := 0; j < len(mp[i]); j++ {
+			mp[i][j] += d.bias[0][j]
 		}
 	}
 	d.output = mp

@@ -9,7 +9,7 @@ import (
 // this is just generated from chatgpt which converts
 // https://github.com/Sentdex/nnfs/blob/master/nnfs/datasets/spiral.py this code to this
 // orignal license : https://github.com/cs231n/cs231n.github.io/blob/master/LICENSE
-func generateData(samples, classes int) (X [][]float64, y []float64) {
+func GenerateData(samples, classes int) (X [][]float64, y []float64) {
 	X = make([][]float64, samples*classes)
 	y = make([]float64, samples*classes)
 	for classNumber := 0; classNumber < classes; classNumber++ {
@@ -45,40 +45,39 @@ func Run() {
 	fmt.Println("Hello World!")
 
 	// Create Random Dataset
-	X, y := generateData(100, 3)
+	X, y := GenerateData(100, 3)
 
-	// fmt.Println(X, y)
-
-	// Create Dense layer with 2 input features and 3 output values
-	denseLayer1 := NewDenseLayer(2, 3)
-	// Make a forward pass of our training data through this layer
-	denseLayer1.Forward(X)
-
-	// Create ReLU activation (to be used with Dense layer):
+	denseLayer1 := NewDenseLayer(2, 64)
+	denseLayer2 := NewDenseLayer(64, 3)
+	fmt.Println(denseLayer1.weights)
 	activation := NewReLU()
-	// Make a forward pass through activation function
-	// it takes the output of first dense layer here
-	activation.Forward(denseLayer1.output)
-
-	// Create second Dense layer with 3 input features (as we take output
-	//  of previous layer here) and 3 output values (output values)
-	denseLayer2 := NewDenseLayer(3, 3)
-	// Make a forward pass through second Dense layer
-	// it takes outputs of activation function of first layer as inputs
-	denseLayer2.Forward(activation.output)
-
 	softmax := NewSoftmax()
+
 	loss := NewCatergoricalCrossEntropyLoss()
 	loss_act := NewSoftmaxCatergoricalCrossEntropy(softmax, loss)
 
-	l := loss_act.Forward(denseLayer2.output, y)
-	acc := Accuracy(loss_act.output, y)
-	fmt.Println(loss_act.output, l, acc)
+	for i := 0; i < 1001; i++ {
+		opt := NewSGDOptimizer(0.86)
 
-	loss_act.Backward(loss_act.output, y)
-	denseLayer2.Backward(loss_act.dInputs)
-	activation.Backward(denseLayer2.dInputs)
-	denseLayer1.Backward(activation.dInputs)
+		denseLayer1.Forward(X)
+		activation.Forward(denseLayer1.output)
+		denseLayer2.Forward(activation.output)
 
-	fmt.Println(denseLayer1.dWeights, denseLayer1.dBias, denseLayer2.dWeights, denseLayer2.dBias)
+		l := loss_act.Forward(denseLayer2.output, y)
+		acc := Accuracy(loss_act.output, y)
+
+		loss_act.Backward(loss_act.output, y)
+		denseLayer2.Backward(loss_act.dInputs)
+		activation.Backward(denseLayer2.dInputs)
+		denseLayer1.Backward(activation.dInputs)
+
+		if i%100 == 0 {
+			fmt.Printf("epoch: %d, acc: %.3f, loss: %.3f\n", i, acc, l)
+		}
+
+		// This is where we update our weights and biases
+		opt.Update(denseLayer1)
+		opt.Update(denseLayer2)
+
+	}
 }

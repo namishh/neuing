@@ -39,7 +39,7 @@ func (cc *CatergoricalCrossEntropyLoss) Backward(dValues [][]float64, y []float6
 	for i := 0; i < samples; i++ {
 		cc.dinputs[i] = make([]float64, labels)
 		for j := 0; j < labels; j++ {
-			cc.dinputs[i][j] = -y[j] / dValues[i][j]
+			cc.dinputs[i][j] = -y[i] / dValues[i][j]
 			cc.dinputs[i][j] = cc.dinputs[i][j] / float64(samples)
 		}
 	}
