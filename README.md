@@ -9,6 +9,7 @@ go run src/main.go
 ```
 
 ### TODO
+- [x] Split Code Into Modules
 - [x] Basic Neurons
 - [x] Layers
 - [x] Activation Functions
