@@ -152,6 +152,8 @@ func (d *DenseLayer) Forward(inputs [][]float64) {
 func (d *DenseLayer) Backward(dValues [][]float64) {
 	d.dWeights = matrixProduct(transpose(d.dInputs), dValues)
 	a := transpose(dValues)
+	d.dBias = make([][]float64, 1)
+	d.dBias[0] = make([]float64, len(a[0]))
 	for i := 0; i < len(a); i++ {
 		for j := 0; j < len(a[i]); j++ {
 			d.dBias[0][j] += a[i][j]
@@ -195,7 +197,8 @@ func (r *ReLU) Backward(dValues [][]float64) {
 }
 
 type Softmax struct {
-	output [][]float64
+	output  [][]float64
+	dInputs [][]float64
 }
 
 func NewSoftmax() *Softmax {
@@ -261,6 +264,35 @@ func (s *Softmax) Forward(inputs [][]float64) {
 	s.output = probabilities
 }
 
+func (s *Softmax) Backward(dValues [][]float64) {
+	s.dInputs = make([][]float64, len(s.output))
+
+	for index, singleOutput := range s.output {
+		singleOutput = []float64(singleOutput)
+		jacobian_matrix := make([][]float64, len(singleOutput))
+		for i := range singleOutput {
+			jacobian_matrix[i] = make([]float64, len(singleOutput))
+			for j := range singleOutput {
+				if i == j {
+					jacobian_matrix[i][j] = singleOutput[i]
+				} else {
+					jacobian_matrix[i][j] = -singleOutput[i] * singleOutput[j]
+				}
+			}
+		}
+
+		// Calculate sample-wise gradient
+		// and add it to the array of sample gradients
+		sample_gradient := make([]float64, len(singleOutput))
+		for i := range singleOutput {
+			for j := range singleOutput {
+				sample_gradient[i] += jacobian_matrix[i][j] * dValues[index][j]
+			}
+		}
+		s.dInputs[index] = sample_gradient
+	}
+}
+
 // implmentation of numpy.clip
 func Clip(x float64, min float64, max float64) float64 {
 	if x < min {
@@ -283,8 +315,13 @@ func MaxElement(arr []float64) float64 {
 	return max
 }
 
-// Loss Function
-func CategoricalCrossEntropyLoss(yPred [][]float64, yTrue []float64) (loss float64) {
+// Loss Struct
+
+type CatergoricalCrossEntropyLoss struct {
+	dinputs [][]float64
+}
+
+func (cc *CatergoricalCrossEntropyLoss) Forward(yPred [][]float64, yTrue []float64) (loss float64) {
 	//samples = len(yPred)
 	yPredClipped := make([][]float64, len(yPred))
 	for i, arr := range yPred {
@@ -303,6 +340,24 @@ func CategoricalCrossEntropyLoss(yPred [][]float64, yTrue []float64) (loss float
 
 	loss = loss / float64(len(yPredClipped))
 	return
+}
+
+func NewCatergoricalCrossEntropyLoss() *CatergoricalCrossEntropyLoss {
+	return &CatergoricalCrossEntropyLoss{}
+}
+
+func (cc *CatergoricalCrossEntropyLoss) Backward(dValues [][]float64, y []float64) {
+	samples := len(dValues)
+	labels := len(dValues[0])
+
+	cc.dinputs = make([][]float64, samples)
+	for i := 0; i < samples; i++ {
+		cc.dinputs[i] = make([]float64, labels)
+		for j := 0; j < labels; j++ {
+			cc.dinputs[i][j] = -y[j] / dValues[i][j]
+			cc.dinputs[i][j] = cc.dinputs[i][j] / float64(samples)
+		}
+	}
 }
 
 // Implmentation of numpy.argmax
@@ -326,6 +381,41 @@ func Accuracy(actOutput [][]float64, y []float64) float64 {
 	accuracy := numCorrect / float64(len(predictions))
 
 	return accuracy
+}
+
+type SoftmaxCatergoricalCrossEntropy struct {
+	activation *Softmax
+	loss       *CatergoricalCrossEntropyLoss
+	output     [][]float64
+	dInputs    [][]float64
+}
+
+func NewSoftmaxCatergoricalCrossEntropy(act *Softmax, loss *CatergoricalCrossEntropyLoss) *SoftmaxCatergoricalCrossEntropy {
+	return &SoftmaxCatergoricalCrossEntropy{activation: act, loss: loss}
+}
+
+func (scc *SoftmaxCatergoricalCrossEntropy) Forward(inputs [][]float64, y []float64) (loss float64) {
+	scc.activation.Forward(inputs)
+	scc.output = scc.activation.output
+	loss = scc.loss.Forward(scc.activation.output, y)
+	return
+}
+
+func (scc *SoftmaxCatergoricalCrossEntropy) Backward(dValues [][]float64, y []float64) {
+	samples := len(dValues)
+	labels := len(dValues[0])
+	scc.dInputs = dValues
+
+	// Calculate gradient
+	for i := 0; i < samples; i++ {
+		for j := 0; j < labels; j++ {
+			if y[j] == 1 {
+				scc.dInputs[i][j] -= 1
+			}
+			// Normalize graident
+			scc.dInputs[i][j] = scc.dInputs[i][j] / float64(samples)
+		}
+	}
 }
 
 func main() {
@@ -354,14 +444,18 @@ func main() {
 	// it takes outputs of activation function of first layer as inputs
 	denseLayer2.Forward(activation.output)
 
-	// Create Softmax activation (to be used with Dense layer):
 	softmax := NewSoftmax()
-	// make a forward pass through activation function
-	// it takes the output of second dense layer here
-	softmax.Forward(denseLayer2.output)
+	loss := NewCatergoricalCrossEntropyLoss()
+	loss_act := NewSoftmaxCatergoricalCrossEntropy(softmax, loss)
 
-	loss := CategoricalCrossEntropyLoss(softmax.output, y)
-	acc := Accuracy(activation.output, y)
-	fmt.Println(loss)
-	fmt.Println(acc)
+	l := loss_act.Forward(denseLayer2.output, y)
+	acc := Accuracy(loss_act.output, y)
+	fmt.Println(loss_act.output, l, acc)
+
+	loss_act.Backward(loss_act.output, y)
+	denseLayer2.Backward(loss_act.dInputs)
+	activation.Backward(denseLayer2.dInputs)
+	denseLayer1.Backward(activation.dInputs)
+
+	fmt.Println(denseLayer1.dWeights, denseLayer1.dBias, denseLayer2.dWeights, denseLayer2.dBias)
 }
