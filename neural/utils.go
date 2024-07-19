@@ -133,3 +133,18 @@ func Max(inputs [][]float64) [][]float64 {
 	}
 	return result
 }
+
+func Accuracy(actOutput [][]float64, y []float64) float64 {
+	predictions := make([]float64, len(actOutput))
+	for i, arr := range actOutput {
+		predictions[i] = float64(IndexOf(MaxElement(arr), arr))
+	}
+	numCorrect := 0.0
+	for i := 0; i < len(predictions); i++ {
+		if predictions[i] == y[i] {
+			numCorrect++
+		}
+	}
+	accuracy := numCorrect / float64(len(predictions))
+	return accuracy
+}

@@ -1,11 +1,14 @@
 package neural
 
 type SGDOptimizer struct {
-	learningRate float64
+	learningRate        float64
+	decay               float64
+	currentLearningRate float64
+	iterations          int
 }
 
-func NewSGDOptimizer(learningRate float64) *SGDOptimizer {
-	return &SGDOptimizer{learningRate: learningRate}
+func NewSGDOptimizer(learningRate float64, decay float64) *SGDOptimizer {
+	return &SGDOptimizer{learningRate: learningRate, decay: decay, currentLearningRate: learningRate, iterations: 0}
 }
 
 func (s *SGDOptimizer) Update(layer *DenseLayer) {
@@ -19,4 +22,12 @@ func (s *SGDOptimizer) Update(layer *DenseLayer) {
 			layer.bias[i][j] += -s.learningRate * layer.dBias[i][j]
 		}
 	}
+}
+
+func (s *SGDOptimizer) PreUpdate() {
+	s.currentLearningRate = s.learningRate / (1 + s.decay*float64(s.iterations))
+}
+
+func (s *SGDOptimizer) PostUpdate() {
+	s.iterations++
 }

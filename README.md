@@ -9,12 +9,10 @@ go run src/main.go
 ```
 
 ### TODO
-- [x] Split Code Into Modules
 - [x] Basic Neurons
 - [x] Layers
 - [x] Activation Functions
 - [x] Loss Functions
-- [x] Rewrite Loss as a Type
 - [x] Backpropagation
 - [ ] Optimization
 - [ ] Data
@@ -25,6 +23,11 @@ go run src/main.go
 - [ ] Model Evaluation
 - [ ] Prediction
 - [ ] Possible GUI?
+
+### Fixes
+- [x] Rewrite Loss as a Type
+- [x] Split Code Into Modules
+- [ ] Fix the backpropagation
 
 ### Credits
 - [3Blue1Brown](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) for the amazing neural network series
