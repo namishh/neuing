@@ -45,33 +45,41 @@ func (s *Softmax) Forward(inputs [][]float64) {
 	s.output = probabilities
 }
 
+// credit: https://gist.github.com/cpurta/6da5bc31a9f416c6866cc60d7a076a8c
+func Flatten(nested [][]float64) []float64 {
+	var res []float64
+	for _, inner := range nested {
+		res = append(res, inner...)
+	}
+	return res
+}
+
+func Diagflat(array [][]float64) {
+	flattened := Flatten(array)
+	length := len(flattened)
+	for i := 0; i < length; i++ {
+		for j := 0; j < length; j++ {
+			if i == j {
+				array[i][j] = flattened[i]
+			} else {
+				array[i][j] = 0
+			}
+		}
+	}
+}
+
+func OneXN(nested []float64) [][]float64 {
+	res := make([][]float64, len(nested))
+	for i, val := range nested {
+		res[i] = []float64{val}
+	}
+	return res
+}
+
 func (s *Softmax) Backward(dValues [][]float64) {
 	s.dInputs = make([][]float64, len(s.output))
 
 	for index, singleOutput := range s.output {
-		// Calculate Jacobian matrix
-		jacobianMatrix := make([][]float64, len(singleOutput))
-		for i := range jacobianMatrix {
-			jacobianMatrix[i] = make([]float64, len(singleOutput))
-			for j := range jacobianMatrix[i] {
-				if i == j {
-					jacobianMatrix[i][j] = singleOutput[i] * (1 - singleOutput[j])
-				} else {
-					jacobianMatrix[i][j] = -singleOutput[i] * singleOutput[j]
-				}
-			}
-		}
-
-		// Calculate sample-wise gradient
-		sampleGradient := make([]float64, len(singleOutput))
-		for i := range sampleGradient {
-			for j, dVal := range singleOutput {
-				sampleGradient[i] += jacobianMatrix[i][j] * dVal
-			}
-		}
-
-		// Store the gradient in s.dInputs
-		s.dInputs[index] = sampleGradient
 	}
 }
 

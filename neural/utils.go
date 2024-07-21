@@ -1,6 +1,9 @@
 package neural
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 // transposition of a matrix ; rotating a matrix by 90 degrees
 // https://en.wikipedia.org/wiki/Transpose
@@ -142,9 +145,10 @@ func Accuracy(actOutput [][]float64, y []float64) float64 {
 	numCorrect := 0.0
 	for i := 0; i < len(predictions); i++ {
 		if predictions[i] == y[i] {
-			numCorrect++
+			numCorrect += 1
 		}
 	}
+	fmt.Println("Number of correct predictions: ", numCorrect, " out of ", len(predictions))
 	accuracy := numCorrect / float64(len(predictions))
 	return accuracy
 }
