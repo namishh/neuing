@@ -1,6 +1,8 @@
 package neural
 
-import "math"
+import (
+	"math"
+)
 
 type Softmax struct {
 	output  [][]float64
@@ -45,7 +47,6 @@ func (s *Softmax) Forward(inputs [][]float64) {
 	s.output = probabilities
 }
 
-// credit: https://gist.github.com/cpurta/6da5bc31a9f416c6866cc60d7a076a8c
 func Flatten(nested [][]float64) []float64 {
 	var res []float64
 	for _, inner := range nested {
@@ -76,10 +77,50 @@ func OneXN(nested []float64) [][]float64 {
 	return res
 }
 
+// Function to multiply 2d array with a 1d array
+func TwoDXOneD(double [][]float64, single []float64) []float64 {
+	// Check if the dimensions of the arrays are compatible for multiplication
+	if len(double[0]) != len(single) {
+		panic("Incompatible dimensions")
+	}
+
+	// Initialize the result array with zeros
+	result := make([]float64, len(double))
+
+	// Iterate over each row of the 2D array
+	for i := 0; i < len(double); i++ {
+		// Iterate over each column of the 2D array and each element of the 1D array
+		for j := 0; j < len(single); j++ {
+			// Multiply the corresponding elements and add the result to the corresponding element of the result array
+			result[i] += double[i][j] * single[j]
+		}
+	}
+
+	// Return the result array
+	return result
+}
+
 func (s *Softmax) Backward(dValues [][]float64) {
 	s.dInputs = make([][]float64, len(s.output))
 
-	for index, singleOutput := range s.output {
+	for index := range s.output {
+		singleOutput := s.output[index]
+		singleDValues := dValues[index]
+
+		reshapedSingleOutput := OneXN(singleOutput)
+		tobemul := matrixProduct(reshapedSingleOutput, transpose(reshapedSingleOutput))
+
+		Diagflat(reshapedSingleOutput)
+
+		jacobian := make([][]float64, len(tobemul))
+		for i, row := range tobemul {
+			jacobian[i] = make([]float64, len(row))
+			for j := range row {
+				jacobian[i][j] = reshapedSingleOutput[i][j] - tobemul[i][j]
+			}
+		}
+
+		s.dInputs[index] = TwoDXOneD(jacobian, singleDValues)
 	}
 }
 

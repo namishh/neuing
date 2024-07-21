@@ -1,7 +1,6 @@
 package neural
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -148,7 +147,7 @@ func Accuracy(actOutput [][]float64, y []float64) float64 {
 			numCorrect += 1
 		}
 	}
-	fmt.Println("Number of correct predictions: ", numCorrect, " out of ", len(predictions))
+	//	fmt.Println("Number of correct predictions: ", numCorrect, " out of ", len(predictions))
 	accuracy := numCorrect / float64(len(predictions))
 	return accuracy
 }
