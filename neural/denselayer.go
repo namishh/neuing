@@ -6,12 +6,15 @@ import (
 
 // make a Dense layer struct
 type DenseLayer struct {
-	dWeights [][]float64
-	dBias    [][]float64
-	dInputs  [][]float64
-	weights  [][]float64
-	bias     [][]float64
-	output   [][]float64
+	dWeights       [][]float64
+	dBias          [][]float64
+	dInputs        [][]float64
+	weights        [][]float64
+	bias           [][]float64
+	output         [][]float64
+	inputs         [][]float64
+	biasMomentum   [][]float64
+	weightMomentum [][]float64
 }
 
 func Initweights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
@@ -38,18 +41,26 @@ func (d *DenseLayer) Forward(inputs [][]float64) {
 		}
 	}
 	d.output = mp
-	d.dInputs = inputs
+	d.inputs = inputs
+}
+
+func Sum(matrix [][]float64) [][]float64 {
+	numRows := len(matrix)
+	numCols := len(matrix[0])
+	result := make([][]float64, 1)
+	result[0] = make([]float64, numCols)
+	for j := 0; j < numCols; j++ {
+		sum := 0.0
+		for i := 0; i < numRows; i++ {
+			sum += matrix[i][j]
+		}
+		result[0][j] = sum
+	}
+	return result
 }
 
 func (d *DenseLayer) Backward(dValues [][]float64) {
-	d.dWeights = matrixProduct(transpose(d.dInputs), dValues)
-	a := transpose(dValues)
-	d.dBias = make([][]float64, 1)
-	d.dBias[0] = make([]float64, len(a[0]))
-	for i := 0; i < len(a); i++ {
-		for j := 0; j < len(a[i]); j++ {
-			d.dBias[0][j] += a[i][j]
-		}
-	}
+	d.dWeights = matrixProduct(transpose(d.inputs), dValues)
+	d.dBias = Sum(transpose(dValues))
 	d.dInputs = matrixProduct(dValues, transpose(d.weights))
 }

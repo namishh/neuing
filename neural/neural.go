@@ -19,8 +19,8 @@ func Run() {
 	loss := NewCatergoricalCrossEntropyLoss()
 	loss_act := NewSoftmaxCatergoricalCrossEntropy(softmax, loss)
 
-	for i := 0; i < 1001; i++ {
-		opt := NewSGDOptimizer(0.85, 1e-3)
+	for i := 0; i < 10001; i++ {
+		opt := NewSGDOptimizer(0.85, 1e-3, 0.5)
 
 		denseLayer1.Forward(X)
 		activation.Forward(denseLayer1.output)

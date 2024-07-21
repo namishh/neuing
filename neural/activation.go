@@ -65,8 +65,8 @@ func (s *Softmax) Backward(dValues [][]float64) {
 		// Calculate sample-wise gradient
 		sampleGradient := make([]float64, len(singleOutput))
 		for i := range sampleGradient {
-			for j := range singleOutput {
-				sampleGradient[i] += jacobianMatrix[i][j] * dValues[index][j]
+			for j, dVal := range singleOutput {
+				sampleGradient[i] += jacobianMatrix[i][j] * dVal
 			}
 		}
 
@@ -104,6 +104,8 @@ func (r *ReLU) Backward(dValues [][]float64) {
 		for j, val := range arr {
 			if val > 0 {
 				r.dInputs[i][j] = dValues[i][j]
+			} else {
+				r.dInputs[i][j] = 0
 			}
 		}
 	}
