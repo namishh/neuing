@@ -27,6 +27,56 @@ func (cc *CatergoricalCrossEntropyLoss) Forward(yPred [][]float64, yTrue []float
 	return
 }
 
+func (cc *CatergoricalCrossEntropyLoss) RegularizationLoss(layer *DenseLayer) float64 {
+	regularizationLoss := 0.0
+
+	if layer.weightRegularizerOne > 0 {
+		sum := 0.0
+		for _, arr := range layer.weights {
+			for _, val := range arr {
+				sum += math.Abs(val)
+			}
+		}
+
+		regularizationLoss += layer.weightRegularizerOne * sum
+	}
+
+	if layer.weightRegularizerTwo > 0 {
+		sum := 0.0
+		prodArr := matrixProduct(layer.weights, transpose(layer.weights))
+		for _, arr := range prodArr {
+			for _, val := range arr {
+				sum += val
+			}
+		}
+		regularizationLoss += layer.weightRegularizerTwo * sum
+	}
+
+	if layer.biasRegularizerOne > 0 {
+		sum := 0.0
+		for _, arr := range layer.bias {
+			for _, val := range arr {
+				sum += math.Abs(val)
+			}
+		}
+
+		regularizationLoss += layer.biasRegularizerOne * sum
+	}
+
+	if layer.biasRegularizerTwo > 0 {
+		sum := 0.0
+		prodArr := matrixProduct(layer.bias, transpose(layer.bias))
+		for _, arr := range prodArr {
+			for _, val := range arr {
+				sum += val
+			}
+		}
+		regularizationLoss += layer.biasRegularizerTwo * sum
+	}
+
+	return regularizationLoss
+}
+
 func NewCatergoricalCrossEntropyLoss() *CatergoricalCrossEntropyLoss {
 	return &CatergoricalCrossEntropyLoss{}
 }

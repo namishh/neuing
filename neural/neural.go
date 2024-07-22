@@ -8,10 +8,10 @@ func Run() {
 	fmt.Println("Hello World!")
 
 	// Create Random Dataset
-	X, y := GenerateData(100, 3)
+	X, y := GenerateData(1000, 3)
 
-	denseLayer1 := NewDenseLayer(2, 64)
-	denseLayer2 := NewDenseLayer(64, 3)
+	denseLayer1 := NewDenseLayer(2, 512, 0, 5e-7, 0, 5e-7)
+	denseLayer2 := NewDenseLayer(512, 3, 0, 0, 0, 0)
 
 	activation := NewReLU()
 	softmax := NewSoftmax()
@@ -19,14 +19,16 @@ func Run() {
 	loss := NewCatergoricalCrossEntropyLoss()
 	loss_act := NewSoftmaxCatergoricalCrossEntropy(softmax, loss)
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 1001; i++ {
 		opt := NewSGDOptimizer(0.05, 0, 5e-7)
 
 		denseLayer1.Forward(X)
 		activation.Forward(denseLayer1.output)
 		denseLayer2.Forward(activation.output)
 
-		l := loss_act.Forward(denseLayer2.output, y)
+		reg := loss_act.loss.RegularizationLoss(denseLayer1) + loss_act.loss.RegularizationLoss(denseLayer2)
+
+		l := loss_act.Forward(denseLayer2.output, y) - reg
 		acc := Accuracy(loss_act.output, y)
 
 		loss_act.Backward(loss_act.output, y)
