@@ -15,9 +15,9 @@ go run main.go
 - [x] Loss Functions
 - [x] Backpropagation
 - [x] Optimization
-- [ ] Regularization
+- [x] Regularization
   - [x] L1 and L2 Regularization
-  - [ ] Dropout
+  - [x] Dropout
 - [ ] Regression
 - [ ] Data
   - [ ] Loading Data
