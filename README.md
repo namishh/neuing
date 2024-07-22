@@ -14,7 +14,7 @@ go run src/main.go
 - [x] Activation Functions
 - [x] Loss Functions
 - [x] Backpropagation
-- [ ] Optimization
+- [x] Optimization
 - [ ] Data
   - [ ] Loading Data
   - [ ] Validating Data
