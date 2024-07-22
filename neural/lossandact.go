@@ -23,8 +23,12 @@ func (scc *SoftmaxCatergoricalCrossEntropy) Backward(dValues [][]float64, y []fl
 	labels := len(dValues[0])
 	scc.dInputs = dValues
 
-	for i, y := range y {
-		scc.dInputs[i][int(y)] -= 1
+	for index, slice := range scc.dInputs {
+		for i := 0; i < labels; i++ {
+			if i == int(y[index]) {
+				slice[i] = slice[i] - 1
+			}
+		}
 	}
 
 	// Calculate gradient

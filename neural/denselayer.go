@@ -15,6 +15,8 @@ type DenseLayer struct {
 	inputs         [][]float64
 	biasMomentum   [][]float64
 	weightMomentum [][]float64
+	weightCache    [][]float64
+	biasCache      [][]float64
 }
 
 func Initweights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
@@ -60,6 +62,7 @@ func Sum(matrix [][]float64) [][]float64 {
 }
 
 func (d *DenseLayer) Backward(dValues [][]float64) {
+
 	d.dWeights = matrixProduct(transpose(d.inputs), dValues)
 	d.dBias = Sum(transpose(dValues))
 	d.dInputs = matrixProduct(dValues, transpose(d.weights))

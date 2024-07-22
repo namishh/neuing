@@ -26,12 +26,7 @@ func transpose(m [][]float64) [][]float64 {
 func matrixProduct(m1, m2 [][]float64) [][]float64 {
 	r1 := len(m1)
 	c1 := len(m1[0])
-	r2 := len(m2)
 	c2 := len(m2[0])
-
-	if c1 != r2 {
-		panic("Matrices can't be multiplied")
-	}
 
 	result := make([][]float64, r1)
 	for i := 0; i < r1; i++ {
