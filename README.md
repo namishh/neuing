@@ -1,11 +1,11 @@
 ### Neuing
 
-Work in progress neural network being written from scratch in Golang. No external libraries used for the neural network and all the math revolving it, thought I may add some gui to it?
+Work in progress neural network being written from scratch in Golang. No external libraries used for the neural network and all the math revolving it.
 
 ### Usage
 
 ```bash
-go run src/main.go
+go run main.go
 ```
 
 ### TODO
@@ -15,14 +15,16 @@ go run src/main.go
 - [x] Loss Functions
 - [x] Backpropagation
 - [x] Optimization
+- [ ] Regularization
+  - [x] L1 and L2 Regularization
+  - [ ] Dropout
+- [ ] Regression
 - [ ] Data
   - [ ] Loading Data
   - [ ] Validating Data
   - [ ] Training On the Data
-- [ ] Regularization
 - [ ] Model Evaluation
 - [ ] Prediction
-- [ ] Possible GUI?
 
 ### Fixes
 - [x] Rewrite Loss as a Type

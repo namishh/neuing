@@ -8,10 +8,10 @@ func Run() {
 	fmt.Println("Hello World!")
 
 	// Create Random Dataset
-	X, y := GenerateData(1000, 3)
+	X, y := GenerateData(100, 3)
 
-	denseLayer1 := NewDenseLayer(2, 512, 0, 5e-7, 0, 5e-7)
-	denseLayer2 := NewDenseLayer(512, 3, 0, 0, 0, 0)
+	denseLayer1 := NewDenseLayer(2, 64, 0, 5e-7, 0, 5e-7)
+	denseLayer2 := NewDenseLayer(64, 3, 0, 0, 0, 0)
 
 	activation := NewReLU()
 	softmax := NewSoftmax()

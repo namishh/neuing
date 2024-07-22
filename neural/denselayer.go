@@ -35,7 +35,7 @@ func Initweights(nInputs int, nNeurons int, multiplier float64) [][]float64 {
 }
 
 func NewDenseLayer(nInputs int, nNeurons int, weightRegularizerOne float64, weightRegularizerTwo float64, biasRegularizerOne float64, biasRegularizerTwo float64) *DenseLayer {
-	bias := zeros(1, 512)
+	bias := zeros(1, 64)
 	return &DenseLayer{bias: bias, weights: Initweights(nInputs, nNeurons, 0.01), weightRegularizerOne: weightRegularizerOne, weightRegularizerTwo: weightRegularizerTwo, biasRegularizerOne: biasRegularizerOne, biasRegularizerTwo: biasRegularizerTwo}
 }
 
