@@ -19,7 +19,6 @@ go run main.go
   - [x] L1 and L2 Regularization
   - [x] Dropout
 - [x] Regression
-- [ ] Data
 
 ### Fixes
 - [x] Rewrite Loss as a Type
