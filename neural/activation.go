@@ -159,3 +159,53 @@ func (r *ReLU) Backward(dValues [][]float64) {
 		}
 	}
 }
+
+type Sigmoid struct {
+	inputs  [][]float64
+	output  [][]float64
+	dInputs [][]float64
+}
+
+func NewSigmod() *Sigmoid {
+	return &Sigmoid{}
+}
+
+func (sig *Sigmoid) Forward(inputs [][]float64) {
+	sig.inputs = inputs
+	sig.output = make([][]float64, len(inputs))
+	for i, arr := range inputs {
+		sig.output[i] = make([]float64, len(arr))
+		for j, val := range arr {
+			sig.output[i][j] = 1 / (1 + math.Exp(-val))
+		}
+	}
+}
+
+func (sig *Sigmoid) Backward(dValues [][]float64) {
+	sig.dInputs = make([][]float64, len(sig.inputs))
+	for i, arr := range sig.inputs {
+		sig.dInputs[i] = make([]float64, len(arr))
+		for j, _ := range arr {
+			sig.dInputs[i][j] = dValues[i][j] * (1 - sig.output[i][j]) * sig.output[i][j]
+		}
+	}
+}
+
+type Linear struct {
+	inputs  [][]float64
+	dInputs [][]float64
+	outputs [][]float64
+}
+
+func NewLinear() *Linear {
+	return &Linear{}
+}
+
+func (l *Linear) Forward(inputs [][]float64) {
+	l.inputs = inputs
+	l.outputs = inputs
+}
+
+func (l *Linear) Backward(dValues [][]float64) {
+	l.dInputs = dValues
+}

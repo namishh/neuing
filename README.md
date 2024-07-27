@@ -18,18 +18,12 @@ go run main.go
 - [x] Regularization
   - [x] L1 and L2 Regularization
   - [x] Dropout
-- [ ] Regression
+- [x] Regression
 - [ ] Data
-  - [ ] Loading Data
-  - [ ] Validating Data
-  - [ ] Training On the Data
-- [ ] Model Evaluation
-- [ ] Prediction
 
 ### Fixes
 - [x] Rewrite Loss as a Type
 - [x] Split Code Into Modules
-- [ ] Fix the backpropagation
 
 ### Credits
 - [3Blue1Brown](https://www.youtube.com/channel/UCYO_jab_esuFRV4b17AJtAw) for the amazing neural network series
